@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Asistente virtual CIEBA</title>
 <style>
-:root{--bg:#eef1f6;--sf:#fff;--tx:#1b2430;--mu:#5b6676;--br:#1f3864;--ac:#f2b705;--gn:#2e7d32;--bot:#fff;--usr:#1f3864;--ut:#fff;--bd:#d3dae5;--chip:#e6edf8;--ct:#1f3864;color-scheme:light;
+:root{--bg:#eef1f6;--sf:#fff;--tx:#1b2430;--mu:#5b6676;--br:#1f3864;--ac:#f2b705;--gn:#2e7d32;--bot:#fff;--usr:#1f3864;--ut:#fff;--bd:#d3dae5;--chip:#e6edf8;--ct:#1f3864;--ok:#2e7d32;--no:#b3261e;color-scheme:light;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;color-scheme:dark}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;--ok:#7fd48a;--no:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;--ok:#7fd48a;--no:#ff8a80;color-scheme:dark}
 *,*::before,*::after{box-sizing:border-box}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -17,7 +17,6 @@ header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var
 .logo{width:42px;height:42px;border-radius:50%;background:var(--ac);color:var(--br);display:grid;place-items:center;font-weight:800;font-size:15px;border:3px solid #fff;flex:none}
 header h1{margin:0;font-size:17px;line-height:1.2}
 header p{margin:0;font-size:12.5px;opacity:.85}
-header button{margin-left:auto;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
 #log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
 .m{max-width:86%;padding:10px 13px;border-radius:16px;white-space:pre-line;overflow-wrap:anywhere;border:1px solid var(--bd)}
 .bot{align-self:flex-start;background:var(--bot);border-bottom-left-radius:4px}
@@ -29,6 +28,21 @@ form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--bd);backg
 input{flex:1;min-width:0;font:inherit;padding:10px 14px;border:1px solid var(--bd);border-radius:999px;background:var(--bg);color:var(--tx)}
 .send{background:var(--br);color:#fff;border:0;border-radius:999px;padding:0 18px;font:inherit;cursor:pointer}
 .note{margin:0;padding:2px 14px 8px;font-size:11.5px;color:var(--mu);text-align:center;background:var(--sf)}
+form{border-top:0;padding-top:0}
+.bar{display:flex;gap:8px;padding:8px 12px;background:var(--sf);border-top:1px solid var(--bd)}
+.bar .chip{padding:6px 14px;font-size:13.5px}
+.card{width:min(100%,360px)}
+.card .upd{font-size:12.5px;color:var(--mu);margin-bottom:6px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--bd)}
+.row b{font-size:12.5px;white-space:nowrap}
+.ok{color:var(--ok)}.no{color:var(--no)}
+dialog{border:1px solid var(--bd);border-radius:16px;background:var(--sf);color:var(--tx);padding:20px;max-width:340px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h2{margin:0 0 6px;font-size:18px}dialog p{margin:0 0 16px;color:var(--mu)}
+.acts{display:flex;gap:8px;justify-content:flex-end}.acts .send{padding:9px 18px}
+#bye{position:fixed;inset:0;display:grid;place-items:center;align-content:center;gap:14px;background:var(--br);color:#fff;text-align:center;padding:24px;z-index:5}
+#bye[hidden]{display:none}#bye h2{margin:0}#bye p{margin:0 0 8px}
+#bye .send{background:var(--ac);color:var(--br);font-weight:700;padding:11px 22px}
 </style>
 </head>
 <body>
@@ -36,15 +50,17 @@ input{flex:1;min-width:0;font:inherit;padding:10px 14px;border:1px solid var(--b
   <header>
     <div class="logo" aria-hidden="true">CEA</div>
     <div><h1>Asistente virtual del CIEBA</h1><p>Centro de Educación Alternativa “Boliviano Alemán”</p></div>
-    <button type="button" id="reset">Reiniciar</button>
   </header>
   <div id="log" aria-live="polite"></div>
+  <div class="bar"><button type="button" class="chip" data-c="menu">Menú</button><button type="button" class="chip" data-c="actualizar">Actualizar</button><button type="button" class="chip" data-c="salir">Salir</button></div>
   <form id="f" autocomplete="off">
     <input id="in" type="text" placeholder="Escribe un número o tu consulta" aria-label="Escribe tu consulta">
     <button class="send" type="submit">Enviar</button>
   </form>
   <p class="note">Prototipo de diseño. La información proviene de la dirección del CIEBA; ante cualquier duda, verifícala en el instituto.</p>
 </div>
+<dialog id="dlg"><h2>¿Quieres salir?</h2><p>Se cerrará la conversación con el asistente del CIEBA.</p><div class="acts"><button type="button" class="chip" id="stay">Seguir aquí</button><button type="button" class="send" id="go">Sí, salir</button></div></dialog>
+<div id="bye" hidden><h2>¡Gracias por comunicarte con el CIEBA!</h2><p>Ya puedes cerrar esta pestaña. Te esperamos en el instituto.</p><button type="button" class="send" id="again">Volver a empezar</button></div>
 <script>
 const log=document.getElementById('log'),inp=document.getElementById('in');
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -58,7 +74,7 @@ const T={
  fechas:F, requisitos:R, costos:C,
  inscripcion:[F,R,C].join('\n\n'),
  secundaria:'La educación secundaria funciona con estudio acelerado: puedes cursar dos niveles en un año (no es lo mismo que estudiar dos carreras técnicas). Se obtiene el diploma de Bachiller en Humanidades.\n\nEdad de ingreso: 17 años cumplidos para Aplicados (1.° y 2.°) y 18 años cumplidos para Complementarios (3.° y 4.°) y Especializados (5.° y 6.°).\n\nCupo máximo: 25 estudiantes por curso, con seis paralelos.\n\nSi no tienes tu última libreta, tendrías que comenzar desde los niveles básicos.',
- carreras:'El CIEBA ofrece 12 carreras técnicas: Prótesis Dental, Gastronomía, Mecánica Automotriz, Mecánica Industrial, Textil y Confección, Sastrería, Belleza Integral, Electrónica, Tecnología de la Información Digital, Contaduría General, Serigrafía y Entrenador de Prácticas Deportivas.\n\nEl técnico básico dura 500 horas, tiene cinco módulos y se ingresa desde los 15 años. Para el técnico auxiliar es obligatorio haber cursado el básico. No se puede estudiar más de una carrera técnica a la vez.\n\nCupos: generalmente entre 40 y 50 estudiantes por carrera, según la demanda. Paralelos: depende de la carrera (Textil y Mecánica Automotriz tienen 2 de nivel auxiliar y 1 de nivel medio).\n\nSobre la malla curricular y los contenidos, consulta al docente de la carrera.',
+ carreras:'El técnico básico dura 500 horas, tiene cinco módulos y se ingresa desde los 15 años. Para el técnico auxiliar es obligatorio haber cursado el básico. No se puede estudiar más de una carrera técnica a la vez.\n\nCupos: generalmente entre 40 y 50 estudiantes por carrera, según la demanda. Paralelos: depende de la carrera (Textil y Mecánica Automotriz tienen 2 de nivel auxiliar y 1 de nivel medio).\n\nSi una carrera aparece con cupos agotados, por ahora ya no está disponible; consulta en el instituto si se habilitan nuevos cupos. Sobre la malla curricular y los contenidos, consulta al docente de la carrera.',
  titulacion:'Para tramitar tu título necesitas: CUT o historial académico, declaración jurada y fotografías tipo carnet.\n\nEl trámite pasa por varias instancias (dirección, fiscalización, área departamental y legalización) y, en teoría, puede completarse en cerca de un mes.\n\nActualmente no existe un examen de convalidación para quienes dejaron pasar varios años sin tramitar su título.',
  contacto:`Si tu consulta no está en el menú, acércate al instituto en su horario de atención (${H}) o escribe a sus redes sociales: TikTok y Facebook. Por ahora no hay un número oficial de WhatsApp.\n\nSi tu duda es sobre la malla curricular o los contenidos de una carrera, el docente responsable puede orientarte.`
 };
@@ -70,7 +86,7 @@ const K=[
  ['requisitos',['requisit','document','papeles','libreta','fotocopia','nacimiento','cedula','carnet']],
  ['costos',['costo','cuesta','pago','pagar','cobr','aporte','precio','gratis']],
  ['secundaria',['secundari','bachiller','edad','acelerad','aplicad','complementari','especializad','humanist','colegio']],
- ['carreras',['carrera','tecnic','auxiliar','medio$','malla','materia','cupo','paralelo','taller','oficio','estudiar','curso']],
+ ['carreras',['carrera','tecnic','auxiliar','medio$','malla','materia','cupo','disponib','agotad','lleno','paralelo','taller','oficio','estudiar','curso']],
  ['titulacion',['titul','cut$','historial','declaracion','convalid','certificad','egres']],
  ['inscripcion',['inscrib','inscripci','matricul','ingres']],
  ['contacto',['contact','ayuda','telefono','whatsapp','celular','facebook','tiktok','youtube','redes','numero','llamar','hablar']]
@@ -88,6 +104,32 @@ function topic(text){
   }
   return best;
 }
+let DATA={actualizado:'2026-10-28',carreras:[{n:'Prótesis Dental',d:1},{n:'Gastronomía',d:0},{n:'Mecánica Automotriz',d:0},{n:'Mecánica Industrial',d:1},{n:'Textil y Confección',d:1},{n:'Sastrería',d:1},{n:'Belleza Integral',d:1},{n:'Electrónica',d:1},{n:'Tecnología de la Información Digital',d:1},{n:'Contaduría General',d:1},{n:'Serigrafía',d:1},{n:'Entrenador de Prácticas Deportivas',d:1}]};
+const STEM={'Prótesis Dental':['protesis','dental'],'Gastronomía':['gastronom'],'Mecánica Automotriz':['automotriz','mecanica'],'Mecánica Industrial':['industrial','mecanica'],'Textil y Confección':['textil','confeccion'],'Sastrería':['sastre'],'Belleza Integral':['belleza'],'Electrónica':['electronic'],'Tecnología de la Información Digital':['tic$','sistemas','informatica','computacion'],'Contaduría General':['contaduria','contabilidad'],'Serigrafía':['serigraf'],'Entrenador de Prácticas Deportivas':['entrenador','deporte','deportiv']};
+const fmt=d=>d.split('-').reverse().join('/');
+function careersIn(text){
+  const tk=norm(text).split(/\s+/).filter(Boolean);
+  return DATA.carreras.filter(c=>(STEM[c.n]||[norm(c.n).split(' ')[0].slice(0,6)]).some(st=>{
+    const ex=st.endsWith('$'),w=ex?st.slice(0,-1):st;return tk.some(t=>ex?t===w:t.startsWith(w))}));
+}
+function card(list){
+  const w=document.createElement('div'),h=document.createElement('strong'),u=document.createElement('div');
+  h.textContent='Carreras técnicas del CIEBA';u.className='upd';u.textContent='Actualizado el '+fmt(DATA.actualizado);
+  w.append(h,u);
+  (list||DATA.carreras).forEach(c=>{
+    const r=document.createElement('div'),a=document.createElement('span'),b=document.createElement('b');
+    r.className='row';a.textContent=c.n;b.className=c.d?'ok':'no';b.textContent=c.d?'✔ Disponible':'✖ Cupos agotados';
+    r.append(a,b);w.appendChild(r);
+  });
+  return w;
+}
+async function load(){
+  try{
+    const r=await fetch('carreras.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return false;
+    const j=await r.json();if(!j||!Array.isArray(j.carreras)||!j.carreras.length)return false;
+    DATA={actualizado:String(j.actualizado||DATA.actualizado),carreras:j.carreras.map(c=>({n:String(c.n),d:!!c.d}))};return true;
+  }catch(e){return false}
+}
 let state='menu',busy=false;
 function scroll(){log.scrollTop=log.scrollHeight}
 function user(t){
@@ -97,7 +139,7 @@ function user(t){
 async function say(text,chips){
   const d=document.createElement('div');d.className='m bot';d.textContent='Escribiendo…';log.appendChild(d);scroll();
   await sleep(450);
-  d.textContent=text;
+  if(typeof text==='string')d.textContent=text;else{d.textContent='';d.appendChild(text);d.classList.add('card')}
   if(chips){
     const w=document.createElement('div');w.className='chips';
     for(const c of chips){
@@ -110,19 +152,33 @@ async function say(text,chips){
 }
 async function menu(){
   state='menu';
-  await say('¿En qué puedo ayudarte? Elige una opción o escribe tu consulta:',M.map((m,i)=>({l:`${i+1}. ${m[1]}`,v:String(i+1)})));
+  await say('¿En qué puedo ayudarte? Elige una opción o escribe tu consulta (también puedes usar “Actualizar” o “Salir”):',M.map((m,i)=>({l:`${i+1}. ${m[1]}`,v:String(i+1)})));
 }
+async function more(){state='more';await say('¿Necesitas otra consulta?',[{l:'Sí',v:'si'},{l:'No',v:'no'}])}
 async function answer(id){
+  if(id==='carreras')await say(card());
   await say(T[id]);
-  state='more';
-  await say('¿Necesitas otra consulta?',[{l:'Sí',v:'si'},{l:'No',v:'no'}]);
+  await more();
 }
+async function update(){
+  await say('Actualizando información…');
+  const ok=await load();
+  await say(ok?`Listo, la información se actualizó (${fmt(DATA.actualizado)}). Ya puedes ver la disponibilidad más reciente de las carreras.`:'No encontré datos nuevos: sigues viendo la información más reciente que tengo.',[{l:'Ver carreras',v:'4'},{l:'Menú',v:'menu'}]);
+}
+const dlg=document.getElementById('dlg'),bye=document.getElementById('bye');
+function exitAsk(){if(dlg.showModal)dlg.showModal();else if(confirm('¿Quieres salir del asistente?'))bye.hidden=false}
 async function handle(text,label){
   if(busy||!text.trim())return;
   busy=true;
   user(label||text);
   try{
     const n=norm(text).trim(),tk=n.split(/\s+/).filter(Boolean);
+    if(tk.length<=2){
+      const f=tk[0]||'';
+      if(/^(salir|salgo|cerrar|terminar)$/.test(f)){exitAsk();return}
+      if(/^(actualizar|actualiza|refrescar|recargar)$/.test(f)){await update();return}
+      if(/^(reiniciar|reinicia|empezar|inicio)$/.test(f)){await start();return}
+    }
     if(n==='menu'){await menu();return}
     if(state==='more'&&tk.length<=3){
       if(/^(si|sii|claro|ok|dale|otra|bueno)/.test(n)){await menu();return}
@@ -132,6 +188,12 @@ async function handle(text,label){
       }
     }
     const num=text.trim().match(/^([1-6])[.)]?$/);
+    const cs=num?[]:careersIn(text);
+    if(cs.length){
+      await say(card(cs));
+      await say(cs.some(c=>!c.d)?'Las carreras con cupos agotados ya no están disponibles por ahora; consulta en el instituto si se habilitan nuevos cupos.':'Hay cupos disponibles. Para conocer niveles, paralelos y contenidos, consulta al docente de la carrera.');
+      await more();return;
+    }
     const id=num?M[num[1]-1][0]:topic(text);
     if(id){await answer(id);return}
     if(/^(hola|buen|saludos|hey|ola)/.test(n)){await say('¡Hola! Soy el asistente virtual del CIEBA.');await menu();return}
@@ -140,12 +202,15 @@ async function handle(text,label){
   }finally{busy=false}
 }
 async function start(){
-  busy=true;log.textContent='';state='menu';
+  busy=true;log.textContent='';state='menu';await load();
   await say('¡Hola! Soy el asistente virtual del CIEBA (Centro de Educación Alternativa “Boliviano Alemán”).');
   await menu();busy=false;
 }
 document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();const v=inp.value;inp.value='';handle(v)});
-document.getElementById('reset').addEventListener('click',()=>{if(!busy)start()});
+document.querySelectorAll('.bar .chip').forEach(b=>b.addEventListener('click',()=>handle(b.dataset.c,b.textContent)));
+document.getElementById('stay').onclick=()=>dlg.close();
+document.getElementById('go').onclick=()=>{dlg.close();bye.hidden=false};
+document.getElementById('again').onclick=()=>{bye.hidden=true;start()};
 start();
 </script>
 </body>

@@ -1,0 +1,17 @@
+{
+  "actualizado": "2026-10-28",
+  "carreras": [
+    { "n": "Prótesis Dental", "d": true },
+    { "n": "Gastronomía", "d": false },
+    { "n": "Mecánica Automotriz", "d": false },
+    { "n": "Mecánica Industrial", "d": true },
+    { "n": "Textil y Confección", "d": true },
+    { "n": "Sastrería", "d": true },
+    { "n": "Belleza Integral", "d": true },
+    { "n": "Electrónica", "d": true },
+    { "n": "Tecnología de la Información Digital", "d": true },
+    { "n": "Contaduría General", "d": true },
+    { "n": "Serigrafía", "d": true },
+    { "n": "Entrenador de Prácticas Deportivas", "d": true }
+  ]
+}
