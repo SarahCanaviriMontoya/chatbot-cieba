@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Asistente virtual CIEBA</title>
+<style>
+:root{--bg:#eef1f6;--sf:#fff;--tx:#1b2430;--mu:#5b6676;--br:#1f3864;--ac:#f2b705;--gn:#2e7d32;--bot:#fff;--usr:#1f3864;--ut:#fff;--bd:#d3dae5;--chip:#e6edf8;--ct:#1f3864;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f141b;--sf:#161c25;--tx:#e8edf5;--mu:#98a3b3;--bot:#212a37;--usr:#2d4f8f;--bd:#2c3644;--chip:#1f2c44;--ct:#c9d9f5;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.app{height:100%;max-width:580px;margin:0 auto;display:flex;flex-direction:column;background:var(--sf);border-inline:1px solid var(--bd)}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--br);color:#fff;border-bottom:4px solid var(--ac)}
+.logo{width:42px;height:42px;border-radius:50%;background:var(--ac);color:var(--br);display:grid;place-items:center;font-weight:800;font-size:15px;border:3px solid #fff;flex:none}
+header h1{margin:0;font-size:17px;line-height:1.2}
+header p{margin:0;font-size:12.5px;opacity:.85}
+header button{margin-left:auto;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer}
+#log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
+.m{max-width:86%;padding:10px 13px;border-radius:16px;white-space:pre-line;overflow-wrap:anywhere;border:1px solid var(--bd)}
+.bot{align-self:flex-start;background:var(--bot);border-bottom-left-radius:4px}
+.usr{align-self:flex-end;background:var(--usr);color:var(--ut);border-color:transparent;border-bottom-right-radius:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;max-width:96%}
+.chip{background:var(--chip);color:var(--ct);border:1px solid var(--br);border-radius:999px;padding:8px 14px;font:inherit;font-size:14.5px;cursor:pointer}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--bd);background:var(--sf)}
+input{flex:1;min-width:0;font:inherit;padding:10px 14px;border:1px solid var(--bd);border-radius:999px;background:var(--bg);color:var(--tx)}
+.send{background:var(--br);color:#fff;border:0;border-radius:999px;padding:0 18px;font:inherit;cursor:pointer}
+.note{margin:0;padding:2px 14px 8px;font-size:11.5px;color:var(--mu);text-align:center;background:var(--sf)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo" aria-hidden="true">CEA</div>
+    <div><h1>Asistente virtual del CIEBA</h1><p>Centro de Educación Alternativa “Boliviano Alemán”</p></div>
+    <button type="button" id="reset">Reiniciar</button>
+  </header>
+  <div id="log" aria-live="polite"></div>
+  <form id="f" autocomplete="off">
+    <input id="in" type="text" placeholder="Escribe un número o tu consulta" aria-label="Escribe tu consulta">
+    <button class="send" type="submit">Enviar</button>
+  </form>
+  <p class="note">Prototipo de diseño. La información proviene de la dirección del CIEBA; ante cualquier duda, verifícala en el instituto.</p>
+</div>
+<script>
+const log=document.getElementById('log'),inp=document.getElementById('in');
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ');
+const H='19:00 a 22:30';
+const F='Fechas: las inscripciones son semestrales. El primer semestre comienza en enero (puede extenderse durante febrero) y el segundo desde mediados de julio. Las fechas dependen de los instructivos del Ministerio de Educación.';
+const R='Documentos: fotocopia del certificado de nacimiento y fotocopia del carnet de identidad. Si ingresas al área humanística (secundaria), también la última libreta de calificaciones.';
+const C='Costo: el CIEBA es un centro fiscal y no hay cobros.';
+const T={
+ horario:`El CIEBA atiende en su horario de clases, de ${H}.\nEstamos en la Zona Norte, Av. del Deportista, calles 10 y 11, junto al Mercado Miraflores.`,
+ fechas:F, requisitos:R, costos:C,
+ inscripcion:[F,R,C].join('\n\n'),
+ secundaria:'La educación secundaria funciona con estudio acelerado: puedes cursar dos niveles en un año (no es lo mismo que estudiar dos carreras técnicas). Se obtiene el diploma de Bachiller en Humanidades.\n\nEdad de ingreso: 17 años cumplidos para Aplicados (1.° y 2.°) y 18 años cumplidos para Complementarios (3.° y 4.°) y Especializados (5.° y 6.°).\n\nCupo máximo: 25 estudiantes por curso, con seis paralelos.\n\nSi no tienes tu última libreta, tendrías que comenzar desde los niveles básicos.',
+ carreras:'El CIEBA ofrece 12 carreras técnicas: Prótesis Dental, Gastronomía, Mecánica Automotriz, Mecánica Industrial, Textil y Confección, Sastrería, Belleza Integral, Electrónica, Tecnología de la Información Digital, Contaduría General, Serigrafía y Entrenador de Prácticas Deportivas.\n\nEl técnico básico dura 500 horas, tiene cinco módulos y se ingresa desde los 15 años. Para el técnico auxiliar es obligatorio haber cursado el básico. No se puede estudiar más de una carrera técnica a la vez.\n\nCupos: generalmente entre 40 y 50 estudiantes por carrera, según la demanda. Paralelos: depende de la carrera (Textil y Mecánica Automotriz tienen 2 de nivel auxiliar y 1 de nivel medio).\n\nSobre la malla curricular y los contenidos, consulta al docente de la carrera.',
+ titulacion:'Para tramitar tu título necesitas: CUT o historial académico, declaración jurada y fotografías tipo carnet.\n\nEl trámite pasa por varias instancias (dirección, fiscalización, área departamental y legalización) y, en teoría, puede completarse en cerca de un mes.\n\nActualmente no existe un examen de convalidación para quienes dejaron pasar varios años sin tramitar su título.',
+ contacto:`Si tu consulta no está en el menú, acércate al instituto en su horario de atención (${H}) o escribe a sus redes sociales: TikTok y Facebook. Por ahora no hay un número oficial de WhatsApp.\n\nSi tu duda es sobre la malla curricular o los contenidos de una carrera, el docente responsable puede orientarte.`
+};
+const M=[['horario','Horario y ubicación'],['inscripcion','Inscripción'],['secundaria','Educación secundaria'],['carreras','Carreras técnicas'],['titulacion','Titulación'],['contacto','Contacto y ayuda']];
+// Palabras clave: el orden resuelve empates (lo específico antes que lo general). "$" = palabra exacta.
+const K=[
+ ['horario',['horari','hora$','horas$','atiend','atencion','ubica','donde','direccion','queda']],
+ ['fechas',['fecha','semestre','enero','febrero','julio','comienz','empiez','plazo','abren']],
+ ['requisitos',['requisit','document','papeles','libreta','fotocopia','nacimiento','cedula','carnet']],
+ ['costos',['costo','cuesta','pago','pagar','cobr','aporte','precio','gratis']],
+ ['secundaria',['secundari','bachiller','edad','acelerad','aplicad','complementari','especializad','humanist','colegio']],
+ ['carreras',['carrera','tecnic','auxiliar','medio$','malla','materia','cupo','paralelo','taller','oficio','estudiar','curso']],
+ ['titulacion',['titul','cut$','historial','declaracion','convalid','certificad','egres']],
+ ['inscripcion',['inscrib','inscripci','matricul','ingres']],
+ ['contacto',['contact','ayuda','telefono','whatsapp','celular','facebook','tiktok','youtube','redes','numero','llamar','hablar']]
+];
+function topic(text){
+  const tk=norm(text).split(/\s+/).filter(Boolean);
+  let best=null,top=0;
+  for(const [id,stems] of K){
+    let s=0;
+    for(const st of stems){
+      const ex=st.endsWith('$'),w=ex?st.slice(0,-1):st;
+      if(tk.some(t=>ex?t===w:t.startsWith(w)))s++;
+    }
+    if(s>top){top=s;best=id}
+  }
+  return best;
+}
+let state='menu',busy=false;
+function scroll(){log.scrollTop=log.scrollHeight}
+function user(t){
+  log.querySelectorAll('.chips').forEach(c=>c.remove());
+  const d=document.createElement('div');d.className='m usr';d.textContent=t;log.appendChild(d);scroll();
+}
+async function say(text,chips){
+  const d=document.createElement('div');d.className='m bot';d.textContent='Escribiendo…';log.appendChild(d);scroll();
+  await sleep(450);
+  d.textContent=text;
+  if(chips){
+    const w=document.createElement('div');w.className='chips';
+    for(const c of chips){
+      const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=c.l;
+      b.onclick=()=>handle(c.v,c.l);w.appendChild(b);
+    }
+    log.appendChild(w);
+  }
+  scroll();
+}
+async function menu(){
+  state='menu';
+  await say('¿En qué puedo ayudarte? Elige una opción o escribe tu consulta:',M.map((m,i)=>({l:`${i+1}. ${m[1]}`,v:String(i+1)})));
+}
+async function answer(id){
+  await say(T[id]);
+  state='more';
+  await say('¿Necesitas otra consulta?',[{l:'Sí',v:'si'},{l:'No',v:'no'}]);
+}
+async function handle(text,label){
+  if(busy||!text.trim())return;
+  busy=true;
+  user(label||text);
+  try{
+    const n=norm(text).trim(),tk=n.split(/\s+/).filter(Boolean);
+    if(n==='menu'){await menu();return}
+    if(state==='more'&&tk.length<=3){
+      if(/^(si|sii|claro|ok|dale|otra|bueno)/.test(n)){await menu();return}
+      if(/^(no|nada|gracias|chau|adios)/.test(n)){
+        state='end';
+        await say('¡Gracias por comunicarte con el CIEBA! Te esperamos.',[{l:'Nueva consulta',v:'menu'}]);return;
+      }
+    }
+    const num=text.trim().match(/^([1-6])[.)]?$/);
+    const id=num?M[num[1]-1][0]:topic(text);
+    if(id){await answer(id);return}
+    if(/^(hola|buen|saludos|hey|ola)/.test(n)){await say('¡Hola! Soy el asistente virtual del CIEBA.');await menu();return}
+    await say(`No encontré esa información en mi base. Puedes acudir al instituto en su horario de atención (${H}) o consultar sus redes sociales (TikTok y Facebook).`);
+    await menu();
+  }finally{busy=false}
+}
+async function start(){
+  busy=true;log.textContent='';state='menu';
+  await say('¡Hola! Soy el asistente virtual del CIEBA (Centro de Educación Alternativa “Boliviano Alemán”).');
+  await menu();busy=false;
+}
+document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();const v=inp.value;inp.value='';handle(v)});
+document.getElementById('reset').addEventListener('click',()=>{if(!busy)start()});
+start();
+</script>
+</body>
+</html>
